@@ -4,10 +4,11 @@ version:
 Author: TianyuYuan
 Date: 2021-03-26 13:44:18
 LastEditors: TianyuYuan
-LastEditTime: 2021-03-26 16:20:08
+LastEditTime: 2021-03-26 16:56:20
 '''
 from rich import print as rprint
 from concurrent.futures import ThreadPoolExecutor,as_completed
+from functools import partial
     
 class ProgressBar():
     """类：进度条，可用于显示普通迭代的进度"""
@@ -20,8 +21,7 @@ class ProgressBar():
         if isinstance(task,str): self.task_name = task
         else: self.task_name = task.__name__
         self.length = length
-        # TODO 当迭代对象小于100 or 10 时的情况
-        if self.length < 50: 
+        if self.length < batchs: 
             self.batch_size=1
         else: 
             self.batchs = batchs
@@ -31,9 +31,7 @@ class ProgressBar():
         """
         - i: 迭代到了第i个job
         """
-        # if i%self.batch_size == 0:
         progress = int(i/self.batch_size)
-        # p_bar = "["+"[bold green]>[/bold green]"*(progress)+""+"-"*(self.batchs-progress)+"]"
         p_bar = "["+"[bold green]>[/bold green]"*(progress)+"]"
         p_propotion = "[green]{}[/green]/[red]{}[/red]".format(i,self.length)
         p_percentage = ":rocket:{}%".format(round(i/self.length*100))
@@ -82,10 +80,17 @@ def pb_multi_thread(workers:int,task,iter_files) -> list:
             pb.print_progressbar(i)
     return result
 
-def pb_multi_thread_partial():
-    # TODO
-    result = []
-    return result
+def pb_multi_thread_partial(workers:int,task,iter_files,**kwargs):
+    """显示多进程进度条，针对具有多参数的任务
+    - workers: 指定多进程的max_workers
+    - task: 任务函数
+    - iter_files: 填入要处理的可迭代对象
+    - **kwargs: 填入'keyword=constant_object....'
+    - return: 返回每个job的结果，并存入list返回
+    """
+    new_task = partial(task,**kwargs)
+    new_task.__name__ = task.__name__
+    return pb_multi_thread(workers,new_task,iter_files)
 
 # * * * * * * * * * * * * * * * * * * * * * * * #
 # *           Test Cases & Examples           * #
@@ -95,6 +100,10 @@ def square_a_num(x):
     import time
     time.sleep(0.05)
     return x*x
+
+def multi_para_task(x,a,b,c):
+    """多参数任务函数"""
+    return x+a+b+c
 
 def pb_range_testcase(*args):
     result = []
@@ -113,9 +122,15 @@ def pb_multi_thread_testcase(x):
     result = pb_multi_thread(5,square_a_num,iter_files)
     # print(result)
 
+def pb_multi_thread_partial_testcase(x,a,b,c):
+    iter_files = range(x)
+    result = pb_multi_thread_partial(5,multi_para_task,iter_files,a=a,b=b,c=c)
+    # print(result)
+
 if __name__ == "__main__":
     # Run test case
     # pb_range_testcase(3)
     # pb_simple_iter_testcase(190)
-    pb_multi_thread_testcase(30)
-    pb_multi_thread_testcase(1000)
+    # pb_multi_thread_testcase(30)
+    # pb_multi_thread_testcase(1000)
+    pb_multi_thread_partial_testcase(15,1,1,1)
