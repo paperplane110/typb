@@ -4,14 +4,14 @@ version:
 Author: TianyuYuan
 Date: 2021-03-26 13:44:18
 LastEditors: TianyuYuan
-LastEditTime: 2021-03-26 15:12:11
+LastEditTime: 2021-03-26 16:20:08
 '''
 from rich import print as rprint
 from concurrent.futures import ThreadPoolExecutor,as_completed
     
 class ProgressBar():
     """类：进度条，可用于显示普通迭代的进度"""
-    def __init__(self,task,length,batchs=100):
+    def __init__(self,task,length,batchs=50):
         """类：进度条，可用于显示迭代的进度
         - task: 任务名称，可填入·函数名·或者·字符串·,若填入函数名，则可自动获取该函数的名字描述
         - length: 任务长度，通常为可迭代对象的长度，即len(iter_files)
@@ -21,23 +21,26 @@ class ProgressBar():
         else: self.task_name = task.__name__
         self.length = length
         # TODO 当迭代对象小于100 or 10 时的情况
-        if self.length < 100: self.batchs=10
-        else: self.batchs = batchs
-        self.batch_size = self.length//self.batchs
+        if self.length < 50: 
+            self.batch_size=1
+        else: 
+            self.batchs = batchs
+            self.batch_size = self.length/self.batchs
 
     def print_progressbar(self,i):
         """
         - i: 迭代到了第i个job
         """
-        if i%self.batch_size == 0:
-            progress = int(i/self.batch_size)
-            p_bar = "["+"[bold green]>[/bold green]"*(progress)+""+"-"*(self.batchs-progress)+"]"
-            p_propotion = "[green]{}[/green]/[red]{}[/red]".format(i,self.length)
-            p_percentage = ":rocket:{}%".format(round(i/self.length*100,2))
-            if progress < self.batchs:
-                rprint("{task}:{bar}  {propotion}  {percentage}".format(task=self.task_name,bar=p_bar,propotion=p_propotion,percentage=p_percentage),end="\r")
-            else:
-                rprint("{task}:{bar}  {propotion}  {percentage}".format(task=self.task_name,bar=p_bar,propotion=p_propotion,percentage=p_percentage))
+        # if i%self.batch_size == 0:
+        progress = int(i/self.batch_size)
+        # p_bar = "["+"[bold green]>[/bold green]"*(progress)+""+"-"*(self.batchs-progress)+"]"
+        p_bar = "["+"[bold green]>[/bold green]"*(progress)+"]"
+        p_propotion = "[green]{}[/green]/[red]{}[/red]".format(i,self.length)
+        p_percentage = ":rocket:{}%".format(round(i/self.length*100))
+        if i < self.length:
+            rprint("{task}  {percentage} :{bar}  {propotion}".format(task=self.task_name,bar=p_bar,propotion=p_propotion,percentage=p_percentage),end="\r")
+        else:
+            rprint("{task}  {percentage} :{bar}  {propotion}".format(task=self.task_name,bar=p_bar,propotion=p_propotion,percentage=p_percentage))
 
 
 # * * * * * * * * * * * * * * * * * * * * * * * #
@@ -90,27 +93,29 @@ def pb_multi_thread_partial():
 def square_a_num(x):
     """任务函数"""
     import time
-    time.sleep(0.5)
+    time.sleep(0.05)
     return x*x
 
-def pb_range_testcase():
+def pb_range_testcase(*args):
     result = []
-    for i in pb_range(11):
+    for i in pb_range(*args):
         result.append(square_a_num(i))
-    print(result)
+    # print(result)
 
-def pb_simple_iter_testcase():
+def pb_simple_iter_testcase(x):
     result = []
-    for i in pb_iter(range(100)):
+    for i in pb_iter(range(x)):
         result.append(square_a_num(i))
-    print(result)
+    # print(result)
     
-def pb_multi_thread_testcase():
-    iter_files = range(100)
-    result = pb_multi_thread(20,square_a_num,iter_files)
-    print(result)
+def pb_multi_thread_testcase(x):
+    iter_files = range(x)
+    result = pb_multi_thread(5,square_a_num,iter_files)
+    # print(result)
 
 if __name__ == "__main__":
-    # pb_range_testcase()
-    # pb_simple_iter_testcase()
-    pb_multi_thread_testcase()
+    # Run test case
+    # pb_range_testcase(3)
+    # pb_simple_iter_testcase(190)
+    pb_multi_thread_testcase(30)
+    pb_multi_thread_testcase(1000)
