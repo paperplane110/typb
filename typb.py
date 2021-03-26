@@ -4,7 +4,7 @@ version:
 Author: TianyuYuan
 Date: 2021-03-26 13:44:18
 LastEditors: TianyuYuan
-LastEditTime: 2021-03-26 16:56:20
+LastEditTime: 2021-03-26 16:57:14
 '''
 from rich import print as rprint
 from concurrent.futures import ThreadPoolExecutor,as_completed
@@ -101,7 +101,7 @@ def square_a_num(x):
     time.sleep(0.05)
     return x*x
 
-def multi_para_task(x,a,b,c):
+def multi_param_task(x,a,b,c):
     """多参数任务函数"""
     return x+a+b+c
 
@@ -124,7 +124,7 @@ def pb_multi_thread_testcase(x):
 
 def pb_multi_thread_partial_testcase(x,a,b,c):
     iter_files = range(x)
-    result = pb_multi_thread_partial(5,multi_para_task,iter_files,a=a,b=b,c=c)
+    result = pb_multi_thread_partial(5,multi_param_task,iter_files,a=a,b=b,c=c)
     # print(result)
 
 if __name__ == "__main__":
